@@ -1,0 +1,1654 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>kgtsrg — Roblox Dev</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #080a0f;
+    --surface: #0d1018;
+    --card: #111520;
+    --border: #1e2535;
+    --accent: #4f8fff;
+    --accent2: #a78bff;
+    --text: #e8ecf4;
+    --muted: #5a6478;
+    --dim: #2a3045;
+  }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Mono', monospace;
+    overflow-x: hidden;
+    cursor: none;
+  }
+
+  /* Custom cursor */
+  .cursor {
+    position: fixed;
+    width: 10px; height: 10px;
+    background: var(--accent);
+    border-radius: 50%;
+    pointer-events: none;
+    z-index: 9999;
+    transform: translate(-50%, -50%);
+    transition: width 0.2s, height 0.2s, background 0.2s;
+    mix-blend-mode: screen;
+  }
+  .cursor-ring {
+    position: fixed;
+    width: 36px; height: 36px;
+    border: 1px solid rgba(79,143,255,0.4);
+    border-radius: 50%;
+    pointer-events: none;
+    z-index: 9998;
+    transform: translate(-50%, -50%);
+    transition: all 0.12s ease;
+  }
+  body:hover .cursor { opacity: 1; }
+
+  /* Grid noise overlay */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(79,143,255,0.015) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(79,143,255,0.015) 1px, transparent 1px);
+    background-size: 48px 48px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* ── NAV ── */
+  nav {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    z-index: 100;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px 48px;
+    background: rgba(8,10,15,0.85);
+    backdrop-filter: blur(20px);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .nav-logo {
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    font-size: 1.1rem;
+    letter-spacing: 0.08em;
+    color: var(--text);
+  }
+  .nav-logo span { color: var(--accent); }
+
+  .nav-links { display: flex; gap: 32px; }
+  .nav-links a {
+    font-size: 0.72rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--muted);
+    text-decoration: none;
+    transition: color 0.2s;
+  }
+  .nav-links a:hover { color: var(--accent); }
+
+  .nav-badge {
+    display: flex; align-items: center; gap: 8px;
+    font-size: 0.7rem;
+    letter-spacing: 0.1em;
+    color: var(--accent);
+    border: 1px solid rgba(79,143,255,0.3);
+    padding: 6px 14px;
+    border-radius: 2px;
+  }
+  .nav-badge::before {
+    content: '';
+    width: 6px; height: 6px;
+    background: #4fffb0;
+    border-radius: 50%;
+    animation: pulse 2s infinite;
+  }
+
+  @keyframes pulse {
+    0%,100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.4; transform: scale(0.8); }
+  }
+
+  /* ── HERO ── */
+  .hero {
+    position: relative;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 120px 48px 80px;
+    overflow: hidden;
+    z-index: 1;
+  }
+
+  .hero-glow {
+    position: absolute;
+    width: 600px; height: 600px;
+    background: radial-gradient(circle, rgba(79,143,255,0.12) 0%, transparent 70%);
+    top: 50%; left: 20%;
+    transform: translate(-50%, -50%);
+    pointer-events: none;
+    animation: drift 8s ease-in-out infinite alternate;
+  }
+  .hero-glow2 {
+    position: absolute;
+    width: 400px; height: 400px;
+    background: radial-gradient(circle, rgba(167,139,255,0.08) 0%, transparent 70%);
+    top: 30%; right: 10%;
+    pointer-events: none;
+    animation: drift 10s ease-in-out infinite alternate-reverse;
+  }
+
+  @keyframes drift {
+    from { transform: translate(-50%, -50%) scale(1); }
+    to   { transform: translate(-50%, -50%) scale(1.15) translateY(-30px); }
+  }
+
+  .hero-tag {
+    font-size: 0.7rem;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 24px;
+    opacity: 0;
+    animation: fadeUp 0.6s 0.2s forwards;
+  }
+
+  .hero-name {
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    font-size: clamp(3.5rem, 9vw, 8rem);
+    line-height: 0.92;
+    letter-spacing: -0.02em;
+    margin-bottom: 32px;
+    opacity: 0;
+    animation: fadeUp 0.7s 0.35s forwards;
+  }
+
+  .hero-name .line2 {
+    background: linear-gradient(135deg, var(--accent) 0%, var(--accent2) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .hero-desc {
+    max-width: 480px;
+    font-size: 0.88rem;
+    line-height: 1.8;
+    color: var(--muted);
+    margin-bottom: 48px;
+    opacity: 0;
+    animation: fadeUp 0.7s 0.5s forwards;
+  }
+
+  .hero-desc strong { color: var(--text); font-weight: 500; }
+
+  .hero-cta {
+    display: flex; gap: 16px; flex-wrap: wrap;
+    opacity: 0;
+    animation: fadeUp 0.7s 0.65s forwards;
+  }
+
+  .btn-primary {
+    display: inline-flex; align-items: center; gap: 10px;
+    background: var(--accent);
+    color: #000;
+    font-family: 'DM Mono', monospace;
+    font-size: 0.75rem;
+    font-weight: 500;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    padding: 14px 28px;
+    border: none;
+    border-radius: 2px;
+    text-decoration: none;
+    cursor: none;
+    transition: transform 0.2s, box-shadow 0.2s;
+  }
+  .btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 32px rgba(79,143,255,0.35);
+  }
+
+  .btn-ghost {
+    display: inline-flex; align-items: center; gap: 10px;
+    background: transparent;
+    color: var(--muted);
+    font-family: 'DM Mono', monospace;
+    font-size: 0.75rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    padding: 14px 28px;
+    border: 1px solid var(--border);
+    border-radius: 2px;
+    text-decoration: none;
+    cursor: none;
+    transition: border-color 0.2s, color 0.2s;
+  }
+  .btn-ghost:hover { border-color: var(--accent); color: var(--accent); }
+
+  .hero-stats {
+    position: absolute;
+    right: 48px; bottom: 80px;
+    display: flex; flex-direction: column; gap: 24px;
+    opacity: 0;
+    animation: fadeUp 0.7s 0.8s forwards;
+  }
+
+  .stat {
+    text-align: right;
+  }
+  .stat-num {
+    font-family: 'Syne', sans-serif;
+    font-size: 2rem;
+    font-weight: 800;
+    color: var(--text);
+    line-height: 1;
+  }
+  .stat-label {
+    font-size: 0.65rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-top: 4px;
+  }
+
+  .stat-divider { width: 1px; height: 40px; background: var(--border); margin-left: auto; }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(24px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  /* ── SECTION BASE ── */
+  section {
+    position: relative;
+    z-index: 1;
+    padding: 100px 48px;
+  }
+
+  .section-label {
+    font-size: 0.65rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 16px;
+    display: flex; align-items: center; gap: 12px;
+  }
+  .section-label::before {
+    content: '';
+    display: block;
+    width: 24px; height: 1px;
+    background: var(--accent);
+  }
+
+  .section-title {
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    font-size: clamp(1.8rem, 4vw, 3rem);
+    line-height: 1.1;
+    margin-bottom: 60px;
+    letter-spacing: -0.01em;
+  }
+
+  /* ── SERVICES ── */
+  .services-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 1px;
+    background: var(--border);
+    border: 1px solid var(--border);
+  }
+
+  .service-card {
+    background: var(--card);
+    padding: 40px 36px;
+    position: relative;
+    overflow: hidden;
+    transition: background 0.3s;
+  }
+  .service-card:hover { background: #141924; }
+
+  .service-card::after {
+    content: '';
+    position: absolute;
+    bottom: 0; left: 0;
+    width: 0; height: 2px;
+    background: var(--accent);
+    transition: width 0.4s ease;
+  }
+  .service-card:hover::after { width: 100%; }
+
+  .service-icon {
+    font-size: 1.8rem;
+    margin-bottom: 24px;
+  }
+
+  .service-name {
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 1.15rem;
+    margin-bottom: 12px;
+    color: var(--text);
+  }
+
+  .service-desc {
+    font-size: 0.8rem;
+    line-height: 1.85;
+    color: var(--muted);
+    margin-bottom: 28px;
+  }
+
+  .service-tags {
+    display: flex; flex-wrap: wrap; gap: 8px;
+  }
+
+  .tag {
+    font-size: 0.65rem;
+    letter-spacing: 0.08em;
+    color: var(--accent);
+    border: 1px solid rgba(79,143,255,0.25);
+    padding: 4px 10px;
+    border-radius: 2px;
+  }
+
+  /* ── PROJECTS ── */
+  .projects-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 24px;
+  }
+
+  .project-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    overflow: hidden;
+    transition: transform 0.3s, border-color 0.3s;
+  }
+  .project-card:hover { transform: translateY(-6px); border-color: rgba(79,143,255,0.3); }
+
+  .project-thumb {
+    height: 180px;
+    background: var(--surface);
+    display: flex; align-items: center; justify-content: center;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .project-thumb .thumb-bg {
+    position: absolute;
+    inset: 0;
+    opacity: 0.15;
+  }
+
+  .project-thumb .thumb-icon {
+    font-size: 3rem;
+    position: relative;
+    z-index: 1;
+  }
+
+  .project-info { padding: 28px; }
+
+  .project-type {
+    font-size: 0.62rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--accent2);
+    margin-bottom: 10px;
+  }
+
+  .project-name {
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 1.05rem;
+    margin-bottom: 10px;
+  }
+
+  .project-desc {
+    font-size: 0.78rem;
+    line-height: 1.8;
+    color: var(--muted);
+    margin-bottom: 20px;
+  }
+
+  .project-meta {
+    display: flex; gap: 16px;
+    font-size: 0.68rem;
+    color: var(--dim);
+  }
+
+  /* ── PRICING ── */
+  .pricing-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 24px;
+  }
+
+  .price-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 40px 32px;
+    position: relative;
+    transition: border-color 0.3s, transform 0.3s;
+  }
+  .price-card:hover { border-color: rgba(79,143,255,0.4); transform: translateY(-4px); }
+
+  .price-card.featured {
+    border-color: rgba(79,143,255,0.5);
+    background: linear-gradient(135deg, #111520 0%, #0e1422 100%);
+  }
+  .price-card.featured::before {
+    content: 'POPULAR';
+    position: absolute;
+    top: -1px; right: 24px;
+    background: var(--accent);
+    color: #000;
+    font-size: 0.6rem;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    padding: 4px 10px;
+  }
+
+  .price-tier {
+    font-size: 0.65rem;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 16px;
+  }
+
+  .price-amount {
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    font-size: 2.4rem;
+    color: var(--text);
+    margin-bottom: 4px;
+    line-height: 1;
+  }
+
+  .price-amount span {
+    font-size: 1rem;
+    font-weight: 400;
+    color: var(--muted);
+    font-family: 'DM Mono', monospace;
+  }
+
+  .price-currency {
+    font-size: 0.72rem;
+    color: var(--muted);
+    margin-bottom: 28px;
+  }
+
+  .price-divider {
+    width: 100%; height: 1px;
+    background: var(--border);
+    margin: 24px 0;
+  }
+
+  .price-features {
+    list-style: none;
+    display: flex; flex-direction: column; gap: 12px;
+    margin-bottom: 32px;
+  }
+
+  .price-features li {
+    font-size: 0.78rem;
+    color: var(--muted);
+    display: flex; align-items: flex-start; gap: 10px;
+    line-height: 1.5;
+  }
+  .price-features li::before {
+    content: '→';
+    color: var(--accent);
+    flex-shrink: 0;
+    margin-top: 1px;
+  }
+
+  .price-btn {
+    display: block;
+    width: 100%;
+    padding: 12px;
+    text-align: center;
+    font-family: 'DM Mono', monospace;
+    font-size: 0.72rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    text-decoration: none;
+    border-radius: 2px;
+    transition: all 0.2s;
+    cursor: none;
+  }
+  .price-btn-ghost {
+    color: var(--accent);
+    border: 1px solid rgba(79,143,255,0.3);
+  }
+  .price-btn-ghost:hover { background: rgba(79,143,255,0.08); }
+  .price-btn-fill {
+    background: var(--accent);
+    color: #000;
+    border: 1px solid var(--accent);
+  }
+  .price-btn-fill:hover { box-shadow: 0 4px 20px rgba(79,143,255,0.3); }
+
+  /* ── CONTACT ── */
+  .contact-wrap {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 80px;
+    align-items: start;
+  }
+
+  .contact-info p {
+    font-size: 0.85rem;
+    line-height: 1.9;
+    color: var(--muted);
+    margin-bottom: 40px;
+  }
+
+  .contact-links { display: flex; flex-direction: column; gap: 16px; }
+
+  .contact-link {
+    display: flex; align-items: center; gap: 16px;
+    font-size: 0.8rem;
+    color: var(--muted);
+    text-decoration: none;
+    padding: 16px 20px;
+    border: 1px solid var(--border);
+    border-radius: 2px;
+    transition: border-color 0.2s, color 0.2s;
+  }
+  .contact-link:hover { border-color: var(--accent); color: var(--text); }
+  .contact-link .link-icon { font-size: 1.1rem; }
+  .contact-link .link-arrow { margin-left: auto; color: var(--accent); }
+
+  .contact-form { display: flex; flex-direction: column; gap: 16px; }
+
+  .form-group { display: flex; flex-direction: column; gap: 8px; }
+
+  .form-label {
+    font-size: 0.65rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  .form-input, .form-textarea {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 2px;
+    padding: 14px 16px;
+    font-family: 'DM Mono', monospace;
+    font-size: 0.82rem;
+    color: var(--text);
+    outline: none;
+    transition: border-color 0.2s;
+    resize: none;
+  }
+  .form-input:focus, .form-textarea:focus { border-color: var(--accent); }
+  .form-input::placeholder, .form-textarea::placeholder { color: var(--dim); }
+
+  .form-textarea { min-height: 140px; }
+
+  .form-submit {
+    background: var(--accent);
+    color: #000;
+    font-family: 'DM Mono', monospace;
+    font-size: 0.75rem;
+    font-weight: 500;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    padding: 16px;
+    border: none;
+    border-radius: 2px;
+    cursor: none;
+    transition: box-shadow 0.2s, transform 0.2s;
+  }
+  .form-submit:hover { box-shadow: 0 6px 24px rgba(79,143,255,0.3); transform: translateY(-2px); }
+
+  /* ── FOOTER ── */
+  footer {
+    position: relative; z-index: 1;
+    border-top: 1px solid var(--border);
+    padding: 32px 48px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  footer .footer-left {
+    font-size: 0.72rem;
+    color: var(--muted);
+  }
+
+  footer .footer-left strong {
+    color: var(--text);
+    font-family: 'Syne', sans-serif;
+  }
+
+  footer .footer-right {
+    font-size: 0.65rem;
+    letter-spacing: 0.1em;
+    color: var(--dim);
+  }
+
+  /* ── SCROLL REVEAL ── */
+  .reveal {
+    opacity: 0;
+    transform: translateY(32px);
+    transition: opacity 0.7s ease, transform 0.7s ease;
+  }
+  .reveal.visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  /* ── TOAST ── */
+  .toast {
+    position: fixed;
+    bottom: 32px; left: 50%;
+    transform: translateX(-50%) translateY(20px);
+    background: var(--card);
+    border: 1px solid rgba(79,143,255,0.4);
+    border-radius: 4px;
+    padding: 14px 24px;
+    display: flex; align-items: center; gap: 12px;
+    font-family: 'DM Mono', monospace;
+    font-size: 0.78rem; color: var(--text);
+    z-index: 9999;
+    opacity: 0; pointer-events: none;
+    transition: opacity 0.25s, transform 0.25s;
+    white-space: nowrap;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+  }
+  .toast.show {
+    opacity: 1; pointer-events: none;
+    transform: translateX(-50%) translateY(0);
+  }
+  .toast-icon {
+    width: 8px; height: 8px;
+    background: #4fffb0; border-radius: 50%;
+    flex-shrink: 0;
+  }
+  .toast strong { color: var(--accent); }
+
+  /* ── ROBLOX REDIRECT ── */
+  .roblox-overlay {
+    position: fixed; inset: 0;
+    background: rgba(4,6,12,0.92);
+    backdrop-filter: blur(20px);
+    z-index: 400;
+    display: flex; align-items: center; justify-content: center;
+    opacity: 0; pointer-events: none;
+    transition: opacity 0.3s;
+    padding: 24px;
+  }
+  .roblox-overlay.open { opacity: 1; pointer-events: all; }
+
+  .roblox-box {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 52px 44px;
+    max-width: 400px; width: 100%;
+    text-align: center;
+    transform: translateY(24px) scale(0.96);
+    transition: transform 0.35s cubic-bezier(0.22,1,0.36,1);
+    position: relative;
+    overflow: hidden;
+  }
+  .roblox-box::before {
+    content: '';
+    position: absolute; top: 0; left: 0; right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, #ff3b3b, #ff7070);
+  }
+  .roblox-overlay.open .roblox-box { transform: translateY(0) scale(1); }
+
+  .roblox-logo {
+    margin-bottom: 20px;
+    display: flex; justify-content: center;
+  }
+  .roblox-logo svg {
+    filter: drop-shadow(0 4px 16px rgba(255,59,59,0.4));
+    animation: floatIcon 3s ease-in-out infinite alternate;
+  }
+  @keyframes floatIcon {
+    from { transform: translateY(0); }
+    to   { transform: translateY(-6px); }
+  }
+
+  .roblox-title {
+    font-family: 'Syne', sans-serif;
+    font-weight: 800; font-size: 1.35rem;
+    margin-bottom: 6px; color: var(--text);
+  }
+  .roblox-user {
+    font-size: 1rem; font-weight: 600;
+    color: #ff5555; margin-bottom: 18px;
+    letter-spacing: 0.04em;
+    font-family: 'Syne', sans-serif;
+  }
+  .roblox-desc {
+    font-size: 0.78rem; color: var(--muted);
+    line-height: 1.85; margin-bottom: 32px;
+  }
+  .roblox-btn {
+    display: block; width: 100%;
+    background: #ff3b3b; color: #fff;
+    font-family: 'DM Mono', monospace;
+    font-size: 0.78rem; font-weight: 600;
+    letter-spacing: 0.1em; text-transform: uppercase;
+    padding: 15px; border-radius: 4px;
+    text-decoration: none; margin-bottom: 12px;
+    transition: box-shadow 0.2s, transform 0.2s;
+    cursor: none;
+  }
+  .roblox-btn:hover {
+    box-shadow: 0 6px 24px rgba(255,59,59,0.35);
+    transform: translateY(-2px);
+  }
+  .roblox-cancel {
+    display: block; width: 100%;
+    background: transparent; color: var(--muted);
+    font-family: 'DM Mono', monospace;
+    font-size: 0.72rem; letter-spacing: 0.08em;
+    border: 1px solid var(--border); border-radius: 4px;
+    padding: 10px; cursor: none;
+    transition: border-color 0.2s, color 0.2s;
+  }
+  .roblox-cancel:hover { border-color: var(--muted); color: var(--text); }
+
+  /* ── LIGHTBOX ── */
+  .lightbox-overlay {
+    position: fixed; inset: 0;
+    background: rgba(4,6,12,0.95);
+    backdrop-filter: blur(16px);
+    z-index: 300;
+    display: flex; align-items: center; justify-content: center;
+    opacity: 0; pointer-events: none;
+    transition: opacity 0.3s;
+    padding: 24px;
+  }
+  .lightbox-overlay.open { opacity: 1; pointer-events: all; }
+
+  .lightbox-box {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    max-width: 860px; width: 100%;
+    max-height: 90vh;
+    overflow-y: auto;
+    position: relative;
+    transform: translateY(24px) scale(0.97);
+    transition: transform 0.35s cubic-bezier(0.22,1,0.36,1);
+    display: grid;
+    grid-template-rows: auto 1fr;
+  }
+  .lightbox-overlay.open .lightbox-box { transform: translateY(0) scale(1); }
+
+  .lightbox-close {
+    position: absolute; top: 16px; right: 16px;
+    background: var(--surface); border: 1px solid var(--border);
+    color: var(--muted); font-size: 0.85rem;
+    width: 36px; height: 36px; border-radius: 50%;
+    cursor: none; z-index: 10;
+    transition: color 0.2s, border-color 0.2s;
+  }
+  .lightbox-close:hover { color: var(--text); border-color: var(--accent); }
+
+  .lightbox-media {
+    width: 100%;
+    min-height: 360px;
+    background: var(--surface);
+    border-radius: 6px 6px 0 0;
+    border-bottom: 1px solid var(--border);
+    position: relative;
+    overflow: hidden;
+  }
+
+  /* Upload zone */
+  .lb-upload-zone {
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 14px; width: 100%; min-height: 360px;
+    border: 2px dashed var(--dim);
+    border-radius: 6px 6px 0 0;
+    cursor: pointer;
+    transition: border-color 0.25s, background 0.25s;
+    padding: 40px;
+  }
+  .lb-upload-zone:hover, .lb-upload-zone.dragover {
+    border-color: var(--accent);
+    background: rgba(79,143,255,0.04);
+  }
+  .lb-upload-zone .zone-icon { font-size: 2.8rem; opacity: 0.4; }
+  .lb-upload-zone .zone-title {
+    font-family: 'Syne', sans-serif; font-weight: 700;
+    font-size: 1rem; color: var(--text); opacity: 0.7;
+  }
+  .lb-upload-zone .zone-sub {
+    font-size: 0.7rem; letter-spacing: 0.08em;
+    color: var(--muted); text-align: center; line-height: 1.7;
+  }
+  .lb-upload-zone .zone-btn {
+    background: transparent; color: var(--accent);
+    font-family: 'DM Mono', monospace; font-size: 0.72rem;
+    letter-spacing: 0.12em; text-transform: uppercase;
+    border: 1px solid rgba(79,143,255,0.4); border-radius: 2px;
+    padding: 10px 20px; cursor: pointer; margin-top: 4px;
+    transition: background 0.2s, border-color 0.2s;
+  }
+  .lb-upload-zone .zone-btn:hover {
+    background: rgba(79,143,255,0.1); border-color: var(--accent);
+  }
+
+  /* Scrollable media strip */
+  .lb-scroll-wrap {
+    display: flex;
+    flex-direction: row;
+    overflow-x: auto;
+    overflow-y: hidden;
+    height: 360px;
+    gap: 4px;
+    padding: 0;
+    scroll-snap-type: x mandatory;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: thin;
+    scrollbar-color: var(--accent) var(--surface);
+  }
+  .lb-scroll-wrap::-webkit-scrollbar { height: 4px; }
+  .lb-scroll-wrap::-webkit-scrollbar-track { background: var(--surface); }
+  .lb-scroll-wrap::-webkit-scrollbar-thumb { background: var(--accent); border-radius: 2px; }
+
+  .lb-scroll-item {
+    flex: 0 0 auto;
+    height: 360px;
+    scroll-snap-align: start;
+    position: relative;
+    border-radius: 2px;
+    overflow: hidden;
+    background: #000;
+  }
+  /* Single item takes full width */
+  .lb-scroll-item.single { width: 100%; flex: 0 0 100%; }
+  /* Multiple items: auto width based on aspect */
+  .lb-scroll-item:not(.single) { width: auto; max-width: 560px; min-width: 200px; }
+
+  .lb-scroll-item img,
+  .lb-scroll-item video {
+    height: 100%; width: auto;
+    max-width: 100%;
+    object-fit: contain;
+    display: block;
+  }
+  .lb-scroll-item.single img,
+  .lb-scroll-item.single video {
+    width: 100%; height: 100%; object-fit: contain;
+  }
+
+  /* Count badge */
+  .lb-count {
+    position: absolute; bottom: 12px; left: 12px;
+    background: rgba(8,10,15,0.8); backdrop-filter: blur(6px);
+    color: var(--muted); font-family: 'DM Mono', monospace;
+    font-size: 0.62rem; letter-spacing: 0.1em;
+    padding: 5px 10px; border-radius: 2px;
+    border: 1px solid var(--border);
+    pointer-events: none;
+  }
+
+  /* Add more button */
+  .lb-add-more {
+    position: absolute; bottom: 12px; right: 12px;
+    background: rgba(8,10,15,0.88); backdrop-filter: blur(8px);
+    color: var(--accent); font-family: 'DM Mono', monospace;
+    font-size: 0.65rem; letter-spacing: 0.1em; text-transform: uppercase;
+    border: 1px solid rgba(79,143,255,0.4); border-radius: 2px;
+    padding: 8px 14px; cursor: pointer;
+    transition: border-color 0.2s, background 0.2s;
+    z-index: 5;
+  }
+  .lb-add-more:hover { border-color: var(--accent); background: rgba(79,143,255,0.1); }
+
+  /* Scroll hint arrow */
+  .lb-scroll-hint {
+    position: absolute; right: 0; top: 0; bottom: 0;
+    width: 48px;
+    background: linear-gradient(to right, transparent, rgba(8,10,15,0.6));
+    display: flex; align-items: center; justify-content: center;
+    pointer-events: none;
+    opacity: 0; transition: opacity 0.3s;
+  }
+  .lb-scroll-hint.show { opacity: 1; }
+  .lb-scroll-hint span { color: var(--accent); font-size: 1.1rem; }
+
+  .lightbox-media-input { display: none; }
+
+  .lightbox-content { padding: 36px 40px 40px; }
+
+  .lightbox-type {
+    font-size: 0.62rem; letter-spacing: 0.18em;
+    text-transform: uppercase; color: var(--accent2);
+    margin-bottom: 10px;
+  }
+  .lightbox-title {
+    font-family: 'Syne', sans-serif; font-weight: 800;
+    font-size: 1.8rem; margin-bottom: 16px; line-height: 1.1;
+  }
+  .lightbox-desc {
+    font-size: 0.84rem; line-height: 1.9;
+    color: var(--muted); margin-bottom: 24px;
+  }
+  .lightbox-tags { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 32px; }
+  .lightbox-tags .tag { font-size: 0.65rem; }
+
+  .lightbox-cta {
+    background: var(--accent); color: #000 !important;
+    font-family: 'DM Mono', monospace; font-size: 0.78rem;
+    font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase;
+    padding: 16px 32px; border: none; border-radius: 2px;
+    cursor: none; transition: box-shadow 0.2s, transform 0.2s;
+    display: inline-block;
+  }
+  .lightbox-cta:hover { box-shadow: 0 6px 24px rgba(79,143,255,0.3); transform: translateY(-2px); }
+
+  /* Make project cards look clickable */
+  .project-card { cursor: none; }
+  .project-card .open-card-btn {
+    display: inline-flex; align-items: center; gap: 8px;
+    margin-top: 16px;
+    font-size: 0.68rem; letter-spacing: 0.1em; text-transform: uppercase;
+    color: var(--accent); background: transparent;
+    border: 1px solid rgba(79,143,255,0.3); border-radius: 2px;
+    padding: 8px 14px; cursor: none;
+    transition: background 0.2s, border-color 0.2s;
+  }
+  .project-card .open-card-btn:hover { background: rgba(79,143,255,0.08); border-color: var(--accent); }
+
+  /* ── MEDIA THUMB ── */
+  .project-thumb {
+    cursor: none;
+    position: relative;
+  }
+  .project-thumb:hover .thumb-upload-hint { opacity: 1; }
+  .thumb-media-wrap {
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 8px; position: relative; z-index: 1; width: 100%; height: 100%;
+  }
+  .thumb-upload-hint {
+    font-size: 0.65rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--accent);
+    opacity: 0;
+    transition: opacity 0.2s;
+  }
+  .file-input {
+    display: none;
+  }
+  .thumb-img, .thumb-vid {
+    position: absolute; inset: 0;
+    width: 100%; height: 100%;
+    object-fit: cover;
+    border-radius: 0;
+  }
+
+  /* ── MODAL ── */
+  .modal-overlay {
+    position: fixed; inset: 0;
+    background: rgba(4,6,12,0.85);
+    backdrop-filter: blur(12px);
+    z-index: 200;
+    display: flex; align-items: center; justify-content: center;
+    opacity: 0; pointer-events: none;
+    transition: opacity 0.3s;
+  }
+  .modal-overlay.open {
+    opacity: 1; pointer-events: all;
+  }
+  .modal-box {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 48px 40px;
+    max-width: 380px; width: 90%;
+    text-align: center;
+    transform: translateY(20px);
+    transition: transform 0.3s;
+    position: relative;
+  }
+  .modal-overlay.open .modal-box { transform: translateY(0); }
+
+  .modal-icon { font-size: 2.4rem; margin-bottom: 16px; }
+  .modal-title {
+    font-family: 'Syne', sans-serif;
+    font-weight: 800; font-size: 1.2rem;
+    margin-bottom: 8px;
+  }
+  .modal-user {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--accent);
+    font-family: 'Syne', sans-serif;
+    margin-bottom: 16px;
+    letter-spacing: 0.04em;
+  }
+  .modal-desc {
+    font-size: 0.78rem; color: var(--muted);
+    line-height: 1.8; margin-bottom: 28px;
+  }
+  .modal-copy {
+    display: block; width: 100%;
+    background: var(--accent); color: #000;
+    font-family: 'DM Mono', monospace;
+    font-size: 0.8rem; font-weight: 600;
+    letter-spacing: 0.1em; text-transform: uppercase;
+    padding: 14px; border: none; border-radius: 2px;
+    cursor: none; margin-bottom: 12px;
+    transition: box-shadow 0.2s;
+  }
+  .modal-copy:hover { box-shadow: 0 4px 20px rgba(79,143,255,0.3); }
+  .modal-close {
+    display: block; width: 100%;
+    background: transparent; color: var(--muted);
+    font-family: 'DM Mono', monospace;
+    font-size: 0.75rem; letter-spacing: 0.08em;
+    border: 1px solid var(--border); border-radius: 2px;
+    padding: 10px; cursor: none;
+    transition: border-color 0.2s, color 0.2s;
+  }
+  .modal-close:hover { border-color: var(--muted); color: var(--text); }
+
+  @media (max-width: 768px) {
+    nav { padding: 16px 24px; }
+    .nav-links { display: none; }
+    section { padding: 72px 24px; }
+    .hero { padding: 120px 24px 80px; }
+    .hero-stats { display: none; }
+    .contact-wrap { grid-template-columns: 1fr; gap: 48px; }
+    footer { flex-direction: column; gap: 12px; text-align: center; }
+  }
+</style>
+</head>
+<body>
+
+<div class="cursor" id="cursor"></div>
+<div class="cursor-ring" id="cursorRing"></div>
+
+<!-- TOAST -->
+<div class="toast" id="toast">
+  <div class="toast-icon"></div>
+  <span>Copied <strong>isdatdrilla</strong> — opening Discord, paste & add me!</span>
+</div>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-logo">kgtsrg<span>.</span></div>
+  <div class="nav-links">
+    <a href="#services">Services</a>
+    <a href="#projects">Work</a>
+    <a href="#contact">Contact</a>
+  </div>
+  <div class="nav-badge">Open for commissions</div>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-glow"></div>
+  <div class="hero-glow2"></div>
+
+  <div class="hero-tag">Roblox Developer</div>
+  <h1 class="hero-name">
+    kgtsrg<br>
+    <span class="line2">dev.</span>
+  </h1>
+  <p class="hero-desc">
+    <strong>Scripting & UI specialist</strong> building polished systems and interfaces for Roblox games. Clean code, fast delivery, and results that actually look good.
+  </p>
+  <div class="hero-cta">
+    <a href="#" class="btn-primary" onclick="openDiscord(event)">→ Start a commission</a>
+    <a href="#projects" class="btn-ghost" onclick="scrollToWork(event)">↓ View my work</a>
+  </div>
+
+  <div class="hero-stats">
+    <div class="stat">
+      <div class="stat-num">10+</div>
+      <div class="stat-label">Projects done</div>
+    </div>
+    <div class="stat-divider"></div>
+    <div class="stat">
+      <div class="stat-num">Lua</div>
+      <div class="stat-label">Primary lang</div>
+    </div>
+    <div class="stat-divider"></div>
+    <div class="stat">
+      <div class="stat-num">Fast</div>
+      <div class="stat-label">Turnaround</div>
+    </div>
+  </div>
+</section>
+
+<!-- SERVICES -->
+<section id="services">
+  <div class="section-label">What I do</div>
+  <h2 class="section-title reveal">Services</h2>
+
+  <div class="services-grid reveal">
+    <div class="service-card">
+      <div class="service-icon">⚙️</div>
+      <div class="service-name">Scripting & Systems</div>
+      <p class="service-desc">Custom Lua scripting for game mechanics, datastores, remote events, anti-cheat, admin systems, and more. Built clean and optimized.</p>
+      <div class="service-tags">
+        <span class="tag">Lua</span>
+        <span class="tag">DataStore</span>
+        <span class="tag">Remotes</span>
+        <span class="tag">OOP</span>
+        <span class="tag">Modules</span>
+      </div>
+    </div>
+
+    <div class="service-card">
+      <div class="service-icon">🖥️</div>
+      <div class="service-name">UI Design & Dev</div>
+      <p class="service-desc">Custom GUIs that actually look polished — HUDs, shop menus, inventory systems, leaderboards, and animated screen effects.</p>
+      <div class="service-tags">
+        <span class="tag">ScreenGui</span>
+        <span class="tag">TweenService</span>
+        <span class="tag">Frames</span>
+        <span class="tag">Animations</span>
+      </div>
+    </div>
+
+    <div class="service-card">
+      <div class="service-icon">🔧</div>
+      <div class="service-name">Fixes & Optimization</div>
+      <p class="service-desc">Got bugged scripts or laggy systems? I'll debug, optimize, and make sure things run smoothly. Fast turnaround on smaller jobs.</p>
+      <div class="service-tags">
+        <span class="tag">Debugging</span>
+        <span class="tag">Performance</span>
+        <span class="tag">Refactoring</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- PROJECTS -->
+<section id="projects" style="background: var(--surface);">
+  <div class="section-label">Portfolio</div>
+  <h2 class="section-title reveal">Featured Work</h2>
+
+  <div class="projects-grid" id="projectsGrid">
+    <div class="project-card reveal">
+      <div class="project-thumb" onclick="triggerUpload(this)" title="Click to add screenshot or video">
+        <div class="thumb-bg" style="background: linear-gradient(135deg,#4f8fff22,#a78bff22);"></div>
+        <div class="thumb-media-wrap">
+          <div class="thumb-icon">🗃️</div>
+          <div class="thumb-upload-hint">+ Add screenshot / video</div>
+        </div>
+        <input type="file" accept="image/*,video/*" class="file-input" onchange="handleMedia(event, this)">
+      </div>
+      <div class="project-info">
+        <div class="project-type">Scripting</div>
+        <div class="project-name">Custom Scripts</div>
+        <p class="project-desc">Clean, optimized Lua scripts built for any system you need — game mechanics, datastores, remote events, admin tools, and more.</p>
+        <div class="project-meta"><span>Lua · ModuleScripts · RemoteEvents</span></div>
+        <button class="open-card-btn" onclick="openProject(event,0)">→ View project</button>
+      </div>
+    </div>
+
+    <div class="project-card reveal">
+      <div class="project-thumb" onclick="triggerUpload(this)" title="Click to add screenshot or video">
+        <div class="thumb-bg" style="background: linear-gradient(135deg,#ff6b6b22,#4f8fff22);"></div>
+        <div class="thumb-media-wrap">
+          <div class="thumb-icon">🛒</div>
+          <div class="thumb-upload-hint">+ Add screenshot / video</div>
+        </div>
+        <input type="file" accept="image/*,video/*" class="file-input" onchange="handleMedia(event, this)">
+      </div>
+      <div class="project-info">
+        <div class="project-type">UI Design</div>
+        <div class="project-name">Custom UIs</div>
+        <p class="project-desc">Polished, animated GUIs built from scratch — HUDs, menus, shops, inventory screens, and anything else your game needs to look clean.</p>
+        <div class="project-meta"><span>ScreenGui · TweenService · Frames</span></div>
+        <button class="open-card-btn" onclick="openProject(event,1)">→ View project</button>
+      </div>
+    </div>
+
+
+  </div>
+
+  <p class="reveal" style="font-size:0.78rem;color:var(--muted);margin-top:40px;text-align:center;">
+    More work available on request — DM <strong style="color:var(--text)">isdatdrilla</strong> on Discord.
+  </p>
+</section>
+
+<!-- CONTACT -->
+<section id="contact" style="background: var(--surface);">
+  <div class="section-label">Let's work</div>
+  <h2 class="section-title reveal">Get in touch</h2>
+
+  <div class="contact-wrap">
+    <div class="contact-info reveal">
+      <p>
+        Ready to start a commission or have questions? Reach out on Discord or Roblox. I usually reply within a few hours. Tell me what you need and we'll figure out the rest.
+      </p>
+      <div class="contact-links">
+        <a href="#" onclick="openRoblox(event)" class="contact-link">
+          <span class="link-icon">🎮</span>
+          <span>kgtsrg on Roblox</span>
+          <span class="link-arrow">→</span>
+        </a>
+        <a href="#" onclick="openDiscord(event)" class="contact-link">
+          <span class="link-icon">💬</span>
+          <span>Discord — isdatdrilla</span>
+          <span class="link-arrow">→</span>
+        </a>
+      </div>
+    </div>
+
+    <div class="contact-form reveal">
+      <div class="form-group">
+        <label class="form-label">Your name / username</label>
+        <input type="text" class="form-input" placeholder="e.g. DevUser123">
+      </div>
+      <div class="form-group">
+        <label class="form-label">What do you need?</label>
+        <input type="text" class="form-input" placeholder="e.g. Shop GUI + datastore system">
+      </div>
+      <div class="form-group">
+        <label class="form-label">More details</label>
+        <textarea class="form-textarea" placeholder="Describe your project, budget, and timeline..."></textarea>
+      </div>
+      <button class="form-submit" onclick="openDiscord(event)">→ Start Commission — DM on Discord</button>
+    </div>
+  </div>
+</section>
+
+<!-- ROBLOX REDIRECT OVERLAY -->
+<div id="robloxRedirect" class="roblox-overlay" onclick="closeRoblox(event)">
+  <div class="roblox-box">
+    <div class="roblox-logo">
+      <svg width="40" height="40" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <rect width="100" height="100" rx="16" fill="#ff3b3b"/>
+        <path d="M28 20L72 20L80 72L36 80L28 20Z" fill="white"/>
+        <path d="M38 38L62 38L66 62L42 66L38 38Z" fill="#ff3b3b"/>
+      </svg>
+    </div>
+    <div class="roblox-title">Heading to Roblox</div>
+    <div class="roblox-user">@kgtsrg</div>
+    <p class="roblox-desc">You're being taken to my official Roblox profile. Check out my account and feel free to send a friend request!</p>
+    <a href="https://www.roblox.com/users/1377567192/profile" target="_blank" class="roblox-btn" onclick="document.getElementById('robloxRedirect').classList.remove('open')">
+      → Take me there
+    </a>
+    <button class="roblox-cancel" onclick="document.getElementById('robloxRedirect').classList.remove('open')">✕ Cancel</button>
+  </div>
+</div>
+
+<!-- PROJECT LIGHTBOX -->
+<div id="projectLightbox" class="lightbox-overlay" onclick="closeLightbox(event)">
+  <div class="lightbox-box">
+    <button class="lightbox-close" onclick="document.getElementById('projectLightbox').classList.remove('open')">✕</button>
+    <div class="lightbox-media" id="lightboxMedia"></div>
+    <div class="lightbox-content">
+      <div class="lightbox-type" id="lightboxType"></div>
+      <div class="lightbox-title" id="lightboxTitle"></div>
+      <p class="lightbox-desc" id="lightboxDesc"></p>
+      <div class="lightbox-tags" id="lightboxTags"></div>
+      <button class="lightbox-cta" onclick="copyAndNotify(event)">→ Commission this type of work</button>
+    </div>
+  </div>
+</div>
+
+<!-- DISCORD MODAL -->
+<div id="discordModal" class="modal-overlay" onclick="closeDiscord(event)">
+  <div class="modal-box">
+    <div class="modal-icon">💬</div>
+    <div class="modal-title">DM me on Discord</div>
+    <div class="modal-user">isdatdrilla</div>
+    <p class="modal-desc">Copy my username and add me on Discord to start your commission. I'll get back to you fast.</p>
+    <button class="modal-copy" onclick="copyDiscord()">
+      <span id="copyText">Copy username</span>
+    </button>
+    <button class="modal-close" onclick="document.getElementById('discordModal').classList.remove('open')">✕ Close</button>
+  </div>
+</div>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-left">
+    <strong>kgtsrg</strong> — Roblox Developer
+  </div>
+  <div class="footer-right">Open for commissions · 2025</div>
+</footer>
+
+<script>
+  // Project data
+  const projects = [
+    {
+      type: 'Scripting',
+      name: 'Custom Scripts',
+      desc: 'Clean, optimized Lua scripts built for any system you need — game mechanics, datastores, remote events, admin tools, and more. Everything is modular and easy to work with.',
+      tags: ['Lua', 'ModuleScripts', 'RemoteEvents', 'DataStore'],
+      icon: '⚙️',
+      mediaItems: []
+    },
+    {
+      type: 'UI Design',
+      name: 'Custom UIs',
+      desc: 'Polished, animated GUIs built from scratch — HUDs, menus, shops, inventory screens, and anything else your game needs to look clean. Built with TweenService for smooth animations.',
+      tags: ['ScreenGui', 'TweenService', 'Frames', 'Animations'],
+      icon: '🖥️',
+      mediaItems: []
+    }
+  ];
+
+  // Custom cursor
+  const cursor = document.getElementById('cursor');
+  const ring = document.getElementById('cursorRing');
+  let mx = 0, my = 0, rx = 0, ry = 0;
+
+  document.addEventListener('mousemove', e => {
+    mx = e.clientX; my = e.clientY;
+    cursor.style.left = mx + 'px';
+    cursor.style.top = my + 'px';
+  });
+
+  function animateRing() {
+    rx += (mx - rx) * 0.12;
+    ry += (my - ry) * 0.12;
+    ring.style.left = rx + 'px';
+    ring.style.top = ry + 'px';
+    requestAnimationFrame(animateRing);
+  }
+  animateRing();
+
+  document.querySelectorAll('a,button').forEach(el => {
+    el.addEventListener('mouseenter', () => {
+      cursor.style.width = '16px'; cursor.style.height = '16px';
+      ring.style.width = '52px'; ring.style.height = '52px';
+    });
+    el.addEventListener('mouseleave', () => {
+      cursor.style.width = '10px'; cursor.style.height = '10px';
+      ring.style.width = '36px'; ring.style.height = '36px';
+    });
+  });
+
+  // Scroll reveal
+  const reveals = document.querySelectorAll('.reveal');
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach((entry, i) => {
+      if (entry.isIntersecting) {
+        setTimeout(() => entry.target.classList.add('visible'), i * 80);
+        observer.unobserve(entry.target);
+      }
+    });
+  }, { threshold: 0.1 });
+  reveals.forEach(el => observer.observe(el));
+
+  // Copy discord + show toast + open discord
+  let toastTimer;
+  function copyAndNotify(e) {
+    if (e) e.preventDefault();
+    navigator.clipboard.writeText('isdatdrilla').then(() => {
+      const toast = document.getElementById('toast');
+      toast.classList.add('show');
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => toast.classList.remove('show'), 3500);
+      setTimeout(() => {
+        window.open('https://discord.com/users/', '_blank');
+      }, 400);
+    });
+  }
+
+  // Scroll to work section
+  function scrollToWork(e) {
+    e.preventDefault();
+    document.getElementById('projects').scrollIntoView({ behavior: 'smooth' });
+  }
+
+  // Roblox redirect
+  function openRoblox(e) {
+    e.preventDefault();
+    document.getElementById('robloxRedirect').classList.add('open');
+  }
+  function closeRoblox(e) {
+    if (e.target === document.getElementById('robloxRedirect')) {
+      document.getElementById('robloxRedirect').classList.remove('open');
+    }
+  }
+
+  // Discord modal
+  function openDiscord(e) {
+    e.preventDefault();
+    document.getElementById('discordModal').classList.add('open');
+  }
+  function closeDiscord(e) {
+    if (e.target === document.getElementById('discordModal')) {
+      document.getElementById('discordModal').classList.remove('open');
+    }
+  }
+  function copyDiscord() {
+    navigator.clipboard.writeText('isdatdrilla').then(() => {
+      const btn = document.getElementById('copyText');
+      btn.textContent = '✓ Copied!';
+      setTimeout(() => btn.textContent = 'Copy username', 2000);
+    });
+  }
+
+  // Project lightbox
+  let currentProject = 0;
+  function openProject(e, idx) {
+    e.stopPropagation();
+    currentProject = idx;
+    const p = projects[idx];
+    document.getElementById('lightboxType').textContent = p.type;
+    document.getElementById('lightboxTitle').textContent = p.name;
+    document.getElementById('lightboxDesc').textContent = p.desc;
+
+    // Tags
+    const tagsEl = document.getElementById('lightboxTags');
+    tagsEl.innerHTML = p.tags.map(t => `<span class="tag">${t}</span>`).join('');
+
+    // Media area
+    renderLightboxMedia(idx);
+
+    document.getElementById('projectLightbox').classList.add('open');
+  }
+
+  function renderLightboxMedia(idx) {
+    const p = projects[idx];
+    const mediaEl = document.getElementById('lightboxMedia');
+    mediaEl.innerHTML = '';
+
+    // Hidden file input
+    const fileInput = document.createElement('input');
+    fileInput.type = 'file';
+    fileInput.accept = 'image/*,video/*';
+    fileInput.multiple = true;
+    fileInput.className = 'lightbox-media-input';
+    fileInput.id = 'lbFileInput';
+    fileInput.onchange = (ev) => handleLightboxMedia(ev, idx);
+    mediaEl.appendChild(fileInput);
+
+    if (!p.mediaItems || p.mediaItems.length === 0) {
+      // Upload zone
+      const zone = document.createElement('div');
+      zone.className = 'lb-upload-zone';
+      zone.innerHTML = `
+        <div class="zone-icon">📁</div>
+        <div class="zone-title">Drop your screenshots & videos here</div>
+        <div class="zone-sub">Show off your work — drag files in or click to browse.<br>Supports images and videos.</div>
+        <button class="zone-btn" type="button">+ Upload media</button>
+      `;
+      zone.querySelector('.zone-btn').addEventListener('click', (e) => {
+        e.stopPropagation(); fileInput.click();
+      });
+      zone.addEventListener('click', () => fileInput.click());
+      zone.addEventListener('dragover', (e) => { e.preventDefault(); zone.classList.add('dragover'); });
+      zone.addEventListener('dragleave', () => zone.classList.remove('dragover'));
+      zone.addEventListener('drop', (e) => {
+        e.preventDefault(); zone.classList.remove('dragover');
+        addFiles(e.dataTransfer.files, idx);
+      });
+      mediaEl.appendChild(zone);
+    } else {
+      // Horizontal scroll strip
+      const strip = document.createElement('div');
+      strip.className = 'lb-scroll-wrap';
+
+      p.mediaItems.forEach(item => {
+        const wrap = document.createElement('div');
+        wrap.className = 'lb-scroll-item' + (p.mediaItems.length === 1 ? ' single' : '');
+        let el;
+        if (item.type === 'image') {
+          el = document.createElement('img');
+        } else {
+          el = document.createElement('video');
+          el.controls = true; el.autoplay = false; el.loop = true; el.muted = true; el.playsInline = true;
+        }
+        el.src = item.url;
+        wrap.appendChild(el);
+        strip.appendChild(wrap);
+      });
+
+      mediaEl.appendChild(strip);
+
+      // Scroll hint (show if more than 1 item)
+      if (p.mediaItems.length > 1) {
+        const hint = document.createElement('div');
+        hint.className = 'lb-scroll-hint show';
+        hint.innerHTML = '<span>›</span>';
+        mediaEl.appendChild(hint);
+        strip.addEventListener('scroll', () => {
+          const atEnd = strip.scrollLeft + strip.clientWidth >= strip.scrollWidth - 10;
+          hint.classList.toggle('show', !atEnd);
+        });
+      }
+
+      // Count badge
+      const count = document.createElement('div');
+      count.className = 'lb-count';
+      count.textContent = `${p.mediaItems.length} item${p.mediaItems.length > 1 ? 's' : ''} — scroll →`;
+      mediaEl.appendChild(count);
+
+      // Add more btn
+      const addMore = document.createElement('button');
+      addMore.className = 'lb-add-more';
+      addMore.type = 'button';
+      addMore.textContent = '+ Add more';
+      addMore.addEventListener('click', () => fileInput.click());
+      mediaEl.appendChild(addMore);
+
+      updateCardThumb(idx);
+    }
+  }
+
+  function addFiles(fileList, idx) {
+    const p = projects[idx];
+    if (!p.mediaItems) p.mediaItems = [];
+    const files = Array.from(fileList).filter(f => f.type.startsWith('image/') || f.type.startsWith('video/'));
+    if (files.length === 0) return;
+
+    let loaded = 0;
+    files.forEach(file => {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        p.mediaItems.push({
+          url: e.target.result,
+          type: file.type.startsWith('image/') ? 'image' : 'video'
+        });
+        loaded++;
+        if (loaded === files.length) renderLightboxMedia(idx);
+      };
+      reader.readAsDataURL(file);
+    });
+  }
+
+  function handleLightboxMedia(event, idx) {
+    addFiles(event.target.files, idx);
+  }
+
+  function updateCardThumb(idx) {
+    const p = projects[idx];
+    if (!p.mediaItems || p.mediaItems.length === 0) return;
+    const cards = document.querySelectorAll('.project-card');
+    if (!cards[idx]) return;
+    const thumb = cards[idx].querySelector('.project-thumb');
+    thumb.querySelectorAll('.thumb-img,.thumb-vid').forEach(e => e.remove());
+    const item = p.mediaItems[0];
+    if (item.type === 'image') {
+      const img = document.createElement('img');
+      img.src = item.url; img.className = 'thumb-img';
+      thumb.appendChild(img);
+    } else {
+      const vid = document.createElement('video');
+      vid.src = item.url; vid.className = 'thumb-vid';
+      vid.autoplay = true; vid.loop = true; vid.muted = true; vid.playsInline = true;
+      thumb.appendChild(vid);
+    }
+    const wrap = thumb.querySelector('.thumb-media-wrap');
+    if (wrap) wrap.style.opacity = '0';
+  }
+
+  function closeLightbox(e) {
+    if (e.target === document.getElementById('projectLightbox')) {
+      document.getElementById('projectLightbox').classList.remove('open');
+    }
+  }
+
+  // Media upload for project cards (card thumb click)
+  function triggerUpload(thumb) {
+    thumb.querySelector('.file-input').click();
+  }
+  function handleMedia(event, input) {
+    const file = event.target.files[0];
+    if (!file) return;
+    const url = URL.createObjectURL(file);
+    const thumb = input.closest('.project-thumb');
+    thumb.querySelectorAll('.thumb-img, .thumb-vid').forEach(el => el.remove());
+    let el;
+    if (file.type.startsWith('image/')) {
+      el = document.createElement('img');
+      el.src = url; el.className = 'thumb-img';
+    } else {
+      el = document.createElement('video');
+      el.src = url; el.className = 'thumb-vid';
+      el.autoplay = true; el.loop = true; el.muted = true; el.playsInline = true;
+    }
+    thumb.appendChild(el);
+    const wrap = thumb.querySelector('.thumb-media-wrap');
+    if (wrap) wrap.style.opacity = '0';
+
+    // Find index
+    const cards = Array.from(document.querySelectorAll('.project-card'));
+    const idx = cards.indexOf(thumb.closest('.project-card'));
+    if (idx >= 0) projects[idx].mediaEl = el;
+  }
+
+  // Close lightbox on ESC
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') {
+      document.getElementById('projectLightbox').classList.remove('open');
+      document.getElementById('discordModal').classList.remove('open');
+      document.getElementById('robloxRedirect').classList.remove('open');
+    }
+  });
+</script>
+</body>
+</html>
